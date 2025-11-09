@@ -1,0 +1,55 @@
+# Dependencies are mostly the same versions as what's currently used
+# in zcash-devtool with slight exception. We're also using edition
+# 2021 instead of 2024 and specifying a rust version of 1.81.
+
+[package]
+name = "zecli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Bradley Cushing <bradleycushing@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "Command-line ZCash client"
+readme = "README.md"
+homepage = "https://github.com/bradcush/zecli"
+repository = "https://github.com/bradcush/zecli"
+keywords = ["cli", "zcash", "wallet"]
+categories = ["command-line-utilities"]
+rust-version = "1.81"
+publish = false
+
+[dependencies]
+age = { version = "0.11", features = ["armor", "plugin"] }
+bip0039 = { version = "0.12", features = ["std", "all-languages"] }
+clap = { version = "4.5", features = ["derive", "string", "unstable-styles"] }
+zcash_client_sqlite = { version = "0.18", features = ["unstable", "orchard", "serde"] }
+tokio = { version = "1.21.0", features = ["fs", "macros", "rt-multi-thread", "signal"] }
+zcash_client_backend = { version = "0.20", features = ["lightwalletd-tonic-tls-webpki-roots", "orchard", "pczt", "tor"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+zcash_keys = { version = "0.11", features = ["unstable", "orchard"] }
+tonic = { version = "0.13", features = ["gzip", "tls-webpki-roots"] }
+zcash_protocol = { version = "0.7", features = ["local-consensus"] }
+rand = { version = "0.8", default-features = false }
+rusqlite = { version = "0.32", features = ["time"] }
+zcash_primitives = "0.26"
+tracing = "0.1.41"
+anyhow = "1.0.100"
+rpassword = "7"
+secrecy = "0.8"
+zip321 = "0.6"
+chrono = "0.4"
+serde = "1.0"
+toml = "0.8"
+
+[features]
+default = ["transparent-inputs"]
+transparent-inputs = [
+    "zcash_client_sqlite/transparent-inputs",
+]
+
+[patch.crates-io]
+zcash_client_sqlite = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
+zcash_client_backend = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
+zcash_primitives = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
+zcash_protocol = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
+zcash_keys = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
+zip321 = { git = "https://github.com/zcash/librustzcash.git", rev = "bb71ab63b12ba8b9c6a7da17daf2a223997dd150" }
