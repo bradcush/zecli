@@ -35,8 +35,6 @@ use crate::{
 // I'm using different names for each level to more easily distinguish
 // what is what. That means hierarchy of command, flag, options.
 
-// Understand why I dervie Debug,
-// this wasn't in my original code
 #[derive(Debug, Parser)]
 pub(crate) struct Cli {
     #[command(subcommand)]
@@ -86,7 +84,8 @@ impl Options {
         let mut client =
             server.connect(|| tor_client(wallet_dir.as_ref())).await?;
         // Get the current chain height (for the wallet's birthday and/or
-        // recover-until height). Not sure what birthday and heigh refer to.
+        // recover-until height). Not sure what birthday and height refer to.
+        // This is the height of the blockchain when the wallet is created.
         let chain_tip: u32 = client
             .get_latest_block(service::ChainSpec::default())
             .await?
@@ -95,11 +94,14 @@ impl Options {
             .try_into()
             .expect("block heights must fit into u32");
         let recipients = if tokio::fs::try_exists(&opts.identity).await? {
+            // Seems like age encryption library used is < 1 which is cautioned
+            // to be used for testing purposes only and not necessarily secure
             age::IdentityFile::from_file(opts.identity)?.to_recipients()?
         } else {
-            // Better understand what an age identity is. Whe we
-            // don't have one we create it for the first time. Seems
-            // like it's just some basic encryption for a seed phrase.
+            // Better understand what an age identity is. When we don't have
+            // one we create it for the first time. Seems like it's just some
+            // basic encryption for a seed phrase. Uses the age encryption
+            // library (https://github.com/FiloSottile/age).
             eprintln!(
                 "Generating a new age identity to encrypt the mnemonic phrase"
             );
@@ -169,7 +171,10 @@ impl Options {
             let mut seed = mnemonic.to_seed("");
             let secret = seed.to_vec();
             seed.zeroize();
-            // Understand what exactly a SecretVec is
+            // SecretVec allows for protected-access memory for
+            // cryptographic secrets. Convenient allocation/access
+            // for more protected memory. Notions of guard pages around
+            // memory, read/written only in limited scopes.
             SecretVec::new(secret)
         };
         Self::init_dbs(
@@ -187,11 +192,11 @@ impl Options {
         birthday_height: BlockHeight,
         recover_until: Option<BlockHeight>,
     ) -> Result<AccountBirthday, anyhow::Error> {
-        // Fetch the tree state corresponding to the last block
-        // prior to the wallet's birthday height. NOTE: THIS
-        // APPROACH LEAKS THE BIRTHDAY TO THE SERVER!
-        // Think about how we should do this without leaking,
-        // understand why it's important to not leak the birthday.
+        // Fetch the tree state corresponding to the last block prior
+        // to the wallet's birthday height. NOTE: THIS APPROACH LEAKS
+        // THE BIRTHDAY TO THE SERVER! Leaking a birthday allows the
+        // server to fingerprint transactions. Need to hide the
+        // exact birthday if we want to preserve privacy.
         let request = service::BlockId {
             height: u64::from(birthday_height).saturating_sub(1),
             ..Default::default()
@@ -211,11 +216,12 @@ impl Options {
         birthday: AccountBirthday,
         key_source: Option<&str>,
     ) -> Result<(), anyhow::Error> {
-        // Initialise the block and wallet DBs. Better
+        // Initialize the block and wallet DBs. Better
         // understand how this is used and what we're storing
         // in here initially that's not in a config file.
         let mut db_data = init_dbs(params, wallet_dir)?;
-        // How is the seec protected in this database?
+        // How is the seed protected in this database? It doesn't seem
+        // like it would be but maybe I'm missing something.
         db_data.create_account(account_name, seed, &birthday, key_source)?;
         Ok(())
     }
@@ -264,8 +270,8 @@ fn main() -> Result<(), anyhow::Error> {
             format!("zec-tokio-{id}")
         })
         .build()?;
-    // Because it's async in a different thread, when I use println!
-    // down the line it's not going to be output to the console
+    // We need this to run a future, using the current
+    // thread for async tasks which we call for commands
     runtime.block_on(async {
         let Some(cmd) = opts.command else {
             return Ok(());

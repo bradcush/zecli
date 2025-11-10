@@ -81,7 +81,7 @@ pub(crate) fn init_dbs<P: Parameters + 'static>(
     wallet_dir: Option<&String>,
 ) -> Result<WalletDb<rusqlite::Connection, P, SystemClock, OsRng>, anyhow::Error>
 {
-    // Initialise the block and wallet DBs
+    // Initialize the block and wallet DBs
     let (db_cache, db_data) = get_db_paths(wallet_dir);
     let mut db_cache =
         FsBlockDb::for_path(db_cache).map_err(error::Error::from)?;
