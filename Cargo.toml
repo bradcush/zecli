@@ -28,9 +28,12 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 zcash_keys = { version = "0.11", features = ["unstable", "orchard"] }
 tonic = { version = "0.13", features = ["gzip", "tls-webpki-roots"] }
 zcash_protocol = { version = "0.7", features = ["local-consensus"] }
+iso_currency = { version = "0.5", features = ["with-serde"] }
 rand = { version = "0.8", default-features = false }
 rusqlite = { version = "0.32", features = ["time"] }
 zcash_primitives = "0.26"
+textwrap = "0.16.2"
+rust_decimal = "1"
 tracing = "0.1.41"
 anyhow = "1.0.100"
 rpassword = "7"
@@ -39,6 +42,7 @@ zip321 = "0.6"
 chrono = "0.4"
 serde = "1.0"
 toml = "0.8"
+uuid = "1"
 
 [features]
 default = ["transparent-inputs"]

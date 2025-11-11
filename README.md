@@ -24,18 +24,28 @@ more typical Zcash users. I could have forked it but I want to reimplement
 things to learn what's going on. Ideally security fixes and improvements will
 be backported to the zcash-devtool as well.
 
+Since we want to support what more typical users might need to interact with
+Zcash, we remove certain functionality that's developer specific, most of
+`inspect` which is mostly for debugging purposes.
+
 ## MVP
 
 - [x] Support testnet interaction
 - [x] Initialize a wallet and seed phrase
 - [x] Set up some type of storage
 - [ ] Sync with the current blockchain
-- [ ] View balance information
+- [x] View balance information
 
 ## Building
 
 ``` sh
 cargo build
+```
+
+Check the release package:
+
+``` sh
+cargo check --release
 ```
 
 ## Running
@@ -59,6 +69,23 @@ env RUST_LOG=debug cargo run -- wallet \
         --identity ../dev-wallet/dev-key.txt \
         --network test \
         --server zecrocks
+```
+
+``` sh
+cargo run -- wallet \
+    --dir ../dev-wallet balance
+```
+
+``` sh
+# Sending using zcash-devtool which should fail
+# because transparent addresses don't accept memos
+./target/release/zcash-devtool wallet \
+    --wallet-dir ../dev-wallet send \
+    --identity ../dev-wallet/dev-key.txt \
+    --address tmVaitrWDxpNUU1DhzUgZwLu1ZrrxnFizE3 \
+    --value 1 \
+    --memo memo \
+    --server zecrocks
 ```
 
 ## Faucet

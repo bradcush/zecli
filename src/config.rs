@@ -1,15 +1,21 @@
-use crate::data::{Network, DEFAULT_WALLET_DIR};
 use anyhow::anyhow;
 use bip0039::Mnemonic;
 use serde::{Deserialize, Serialize};
-use std::fs::{self};
-use std::io::Write;
+use std::fs::{self, File};
+use std::io::{BufReader, Read, Write};
 use std::path::Path;
 use zcash_protocol::consensus::{self, BlockHeight};
 
+use crate::{
+    data::{Network, DEFAULT_WALLET_DIR},
+    error,
+};
+
 const KEYS_FILE: &str = "keys.toml";
 
-pub(crate) struct WalletConfig {}
+pub(crate) struct WalletConfig {
+    network: consensus::Network,
+}
 
 impl WalletConfig {
     pub(crate) fn init_with_mnemonic<'a, P: AsRef<Path>>(
@@ -25,6 +31,32 @@ impl WalletConfig {
             birthday,
             network,
         )
+    }
+
+    pub(crate) fn read<P: AsRef<Path>>(
+        wallet_dir: Option<P>,
+    ) -> Result<Self, anyhow::Error> {
+        let mut keys_file = {
+            let mut p = wallet_dir
+                .as_ref()
+                .map(|p| p.as_ref())
+                .unwrap_or(DEFAULT_WALLET_DIR.as_ref())
+                .to_owned();
+            p.push(KEYS_FILE);
+            BufReader::new(File::open(p)?)
+        };
+        let mut conf_str = "".to_string();
+        keys_file.read_to_string(&mut conf_str)?;
+        let config: ConfigEncoding = toml::from_str(&conf_str)?;
+        let network = config.network.map_or_else(
+            || Ok(consensus::Network::TestNetwork),
+            |network_name| {
+                Network::parse(network_name.trim())
+                    .map(consensus::Network::from)
+                    .map_err(|_| error::Error::InvalidKeysFile)
+            },
+        )?;
+        Ok(Self { network })
     }
 }
 
@@ -83,4 +115,10 @@ fn encrypt_mnemonic<'a>(
     writer.write_all(mnemonic.phrase().as_bytes())?;
     writer.finish().and_then(|armor| armor.finish())?;
     Ok(String::from_utf8(ciphertext).expect("armor is valid UTF-8"))
+}
+
+pub(crate) fn get_wallet_network<P: AsRef<Path>>(
+    wallet_dir: Option<P>,
+) -> Result<consensus::Network, anyhow::Error> {
+    Ok(WalletConfig::read(wallet_dir)?.network)
 }

@@ -24,6 +24,8 @@ pub(crate) type WalletErrorT = WalletError<
 pub enum Error {
     Cache(FsBlockDbError),
     Derivation(DerivationError),
+    InvalidRecipient,
+    InvalidKeysFile,
     InvalidTreeState,
     Wallet(WalletErrorT),
     Zip321(Zip321Error),
@@ -34,6 +36,8 @@ impl fmt::Display for Error {
         match self {
             Error::Cache(e) => write!(f, "{e:?}"),
             Error::Derivation(e) => write!(f, "{e:?}"),
+            Error::InvalidRecipient => write!(f, "Invalid recipient"),
+            Error::InvalidKeysFile => write!(f, "Invalid keys file"),
             Error::InvalidTreeState => {
                 write!(f, "Invalid TreeState received from server")
             }
