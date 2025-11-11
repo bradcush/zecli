@@ -1,7 +1,11 @@
 use age::secrecy::ExposeSecret;
 use bip0039::{Count, English, Mnemonic};
 use clap::Args;
+use colored::Colorize;
+use inquire::Confirm;
 use secrecy::{ExposeSecret as _, SecretString, SecretVec, Zeroize};
+use std::process;
+use textwrap::{fill, Options};
 use tokio::io::AsyncWriteExt;
 use tonic::transport::Channel;
 use zcash_client_backend::{
@@ -17,6 +21,7 @@ use crate::{
     data::{init_dbs, Network},
     error,
     remote::{tor_client, Servers},
+    ui::TEXT_WIDTH,
 };
 
 #[derive(Debug, Args)]
@@ -55,6 +60,23 @@ impl InitOptions {
         self,
         wallet_dir: Option<String>,
     ) -> Result<(), anyhow::Error> {
+        let privacy_warning =
+            "Initialization will fetch the tree state corresponding to the last block prior \
+            to the wallet's birthday height. THIS APPROACH LEAKS THE BIRTHDAY TO THE SERVER! \
+            Leaking a birthday allows the server to fingerprint transactions.";
+        let warning_options = Options::new(TEXT_WIDTH);
+        println!(
+            "{}\n",
+            fill(&privacy_warning[..], warning_options).red().bold()
+        );
+        let answer = Confirm::new("Proceed with wallet creation?")
+            .with_default(false)
+            .prompt();
+        match answer {
+            Ok(true) => (),
+            Ok(false) => process::exit(0),
+            Err(_) => process::exit(1),
+        };
         let opts = self;
         let params = consensus::Network::from(opts.network);
         let server = opts.server.pick(params)?;

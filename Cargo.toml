@@ -43,6 +43,8 @@ chrono = "0.4"
 serde = "1.0"
 toml = "0.8"
 uuid = "1"
+colored = "3.0.0"
+inquire = "0.9.1"
 
 [features]
 default = ["transparent-inputs"]

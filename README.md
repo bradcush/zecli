@@ -7,7 +7,9 @@ Command-line ZEC client
 **NOT FOR PRODUCTION USE!** This code base uses
 [zcash-devtool](https://github.com/zcash/zcash-devtool) as a starting point
 which has not been written with security in mind. The eventual goal is to make
-this production ready, but for now use at your own risk.
+this particular client production ready, but for now use at your own risk. Some
+but not all actions that are known ahead of time to compromise on security or
+leak privacy will ask for further user confirmation before running.
 
 ## About
 
@@ -60,9 +62,10 @@ env RUST_LOG=debug cargo run -- wallet init --help
 
 ### Other examples
 
+#### Initialize a testnet wallet
+
 ``` sh
-# Initialize a testnet wallet
-env RUST_LOG=debug cargo run -- wallet \
+cargo run --release -- wallet \
         --dir ../dev-wallet \
     init \
         --name "ZDevTest" \
@@ -71,21 +74,11 @@ env RUST_LOG=debug cargo run -- wallet \
         --server zecrocks
 ```
 
-``` sh
-cargo run -- wallet \
-    --dir ../dev-wallet balance
-```
+#### Retrieve wallet balance
 
 ``` sh
-# Sending using zcash-devtool which should fail
-# because transparent addresses don't accept memos
-./target/release/zcash-devtool wallet \
-    --wallet-dir ../dev-wallet send \
-    --identity ../dev-wallet/dev-key.txt \
-    --address tmVaitrWDxpNUU1DhzUgZwLu1ZrrxnFizE3 \
-    --value 1 \
-    --memo memo \
-    --server zecrocks
+cargo run --release -- wallet \
+    --dir ../dev-wallet balance
 ```
 
 ## Faucet

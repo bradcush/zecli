@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use clap::Args;
+use colored::Colorize;
 use iso_currency::Currency;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use textwrap::{fill, Options};
@@ -21,7 +22,7 @@ use crate::{
     data::get_db_paths,
     error,
     remote::tor_client,
-    ui::format_zec,
+    ui::{format_zec, TEXT_WIDTH},
 };
 
 pub(crate) fn select_account<DbT: WalletRead<AccountId = AccountUuid>>(
@@ -99,12 +100,12 @@ impl BalanceOptions {
             // Replace wtih a non-breaking space otherwise
             // the first line is broken after the colon
             let address = address.replace(" ", "\u{a0}");
-            let address_options = Options::new(80);
+            let address_options = Options::new(TEXT_WIDTH);
             println!("{}\n", fill(&address[..], &address_options));
             // Rest of the details for the wallet address
             let chain_height = wallet_summary.chain_tip_height();
             let height = format!("Height: {}", chain_height);
-            let detail_options = Options::new(80)
+            let detail_options = Options::new(TEXT_WIDTH)
                 .initial_indent("    ")
                 .subsequent_indent("    ");
             println!("{}", fill(&height[..], &detail_options));
@@ -133,7 +134,7 @@ impl BalanceOptions {
             }
             let balance_total = printer.format(balance.total());
             let balance_total = format!("Balance: {}", balance_total);
-            println!("{}", fill(&balance_total[..], &detail_options));
+            println!("{}", fill(&balance_total[..], &detail_options).green());
             let sapling_spendable_value =
                 balance.sapling_balance().spendable_value();
             let sapling = printer.format(sapling_spendable_value);

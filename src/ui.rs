@@ -2,6 +2,8 @@ use zcash_protocol::value::ZatBalance;
 
 const COIN: u64 = 1_0000_0000;
 
+pub const TEXT_WIDTH: usize = 80;
+
 pub(crate) fn format_zec(value: impl TryInto<ZatBalance>) -> String {
     let value = i64::from(
         value
